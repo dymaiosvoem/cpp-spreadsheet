@@ -3,14 +3,11 @@
 #include "common.h"
 #include "formula.h"
 
-#include <functional>
 #include <unordered_set>
-
-class Sheet;
 
 class Cell : public CellInterface {
 public:
-    Cell(Sheet& sheet);
+    Cell(SheetInterface& sheet);
     ~Cell();
 
     void Set(std::string text);
@@ -21,7 +18,9 @@ public:
     std::vector<Position> GetReferencedCells() const override;
 
     bool IsReferenced() const;
-
+    bool HasCache() const;
+    
+    void InvalidateCache();
 private:
     class Impl;
     class EmptyImpl;
@@ -29,8 +28,14 @@ private:
     class FormulaImpl;
 
     std::unique_ptr<Impl> impl_;
+    SheetInterface& sheet_;
 
-    // Добавьте поля и методы для связи с таблицей, проверки циклических 
-    // зависимостей, графа зависимостей и т. д.
+    // на кого ссылается ячейка / кто ссылается на ячейку, 
+    // 1) при добавлении ячейки смотрю циклические зависимости,
+    // 2) при изменении одной из ячеек, нужно смотреть кто использует
+    // измененную ячейку, чтобы инвалидировать кэш
+    std::unordered_set<Cell*> referenced_cells_, dependent_cells_;
 
+    bool CheckCircularDependencies(const std::vector<Position>& referenced_cells_pos);
+    void UpdateDependencies(std::vector<Position>& referenced_cells_pos);
 };
