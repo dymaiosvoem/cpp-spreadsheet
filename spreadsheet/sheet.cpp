@@ -20,9 +20,7 @@ size_t SheetHash::operator()(Position pos) const {
 Sheet::~Sheet() {}
 
 void Sheet::SetCell(Position pos, string text) {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("Position is out of range");
-    }
+    EnsureValidPosition(pos);
     
     auto it = sheet_.find(pos);
 
@@ -45,9 +43,7 @@ CellInterface* Sheet::GetCell(Position pos) {
 }
 
 void Sheet::ClearCell(Position pos) {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("Position is out of range");
-    }
+    EnsureValidPosition(pos);
 
     auto it = sheet_.find(pos);
 
@@ -83,9 +79,7 @@ void Sheet::UpdatePrintableSize(Position pos) {
 }
 
 const CellInterface* Sheet::FindCellInterfacePtr(Position pos) const {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("out_of_range");
-    }
+    EnsureValidPosition(pos);
 
     auto it = sheet_.find(pos);
     return it != sheet_.end() ? it->second.get() : nullptr;
@@ -94,9 +88,9 @@ const CellInterface* Sheet::FindCellInterfacePtr(Position pos) const {
 void Sheet::PrintContext(ostream& output, string context) const {
     Size size = GetPrintableSize();
 
-    for (int i = 0; i < size.rows; ++ i) {
-        for(int j = 0; j < size.cols; ++j) {
-            auto* cell = GetCell({ i, j });
+    for (int row = 0; row < size.rows; ++ row) {
+        for(int col = 0; col < size.cols; ++col) {
+            auto* cell = GetCell({ row, col });
             
             if (cell) {
                 if (context == "Values"s) {
@@ -109,11 +103,17 @@ void Sheet::PrintContext(ostream& output, string context) const {
                 }
             }
 
-            if (j + 1 < size.cols) {
+            if (col + 1 < size.cols) {
                 output << "\t";
             }
         }
         output << "\n";
+    }
+}
+
+void Sheet::EnsureValidPosition(const Position& pos) const {
+    if (!pos.IsValid()) {
+        throw InvalidPositionException("Position is out of range");
     }
 }
 

@@ -33,4 +33,5 @@ private:
     void UpdatePrintableSize(Position pos);
     const CellInterface* FindCellInterfacePtr(Position pos) const;
     void PrintContext(std::ostream& output, std::string context) const;
+    void EnsureValidPosition(const Position& pos) const;
 };
